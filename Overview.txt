@@ -1,0 +1,62 @@
+You are building an AI system that automatically processes business documents
+and makes workflow decisions like a digital employee.
+
+“I built a multi-agent AI workflow engine that processes documents, extracts structured data, 
+validates business rules, and stores audit history using LangGraph and a database.”
+
+
+1) Create Graph folder and makes nodes , state and workflow python file and main file 
+    ->states->nodes->workflow
+
+2) Connection of data base create db folder ->database->model->repository
+
+3) Create Injestion folder in injestion folder ->pdf_parser
+
+4) Make LLm chain llm_client->agents/classifier->agents/extractor->update nodes.py  
+
+Raw PDF
+   ↓
+Text Extraction
+   ↓
+Schema Validation (Pydantic)
+   ↓
+Integrity Scoring (your file) (Resume_integrity)
+   ↓
+LLM Semantic Scoring (Resume_judge)
+   ↓
+Fraud Risk Engine
+   ↓
+Final Risk Aggregator
+   ↓
+Decision Engine
+   ↓
+Audit Logs
+
+
+resume judge and resume integrity for risk score 
+and
+validator for checking the resume is valid or not 
+
+   -- a key word which required for resume are present or not in resume  
+   -- if all present then resume valid 
+   -- but if resume valid then also check other not required keyword is present or not 
+   -- for those checking keyword we use risk score -- how much risk is present on this resume
+                                                   -- using the resume judge and resume integrity
+
+
+Document
+   ↓
+[1] Classification
+   ↓
+[2] Extraction
+   ↓
+[3] Schema Validation
+   ↓
+[4] Integrity Engine (Rule-Based)
+   ↓
+[5] LLM Recruiter Evaluation
+   ↓
+[6] Weighted Risk Model
+   ↓
+Final Decision
+

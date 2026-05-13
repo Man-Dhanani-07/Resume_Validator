@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Resume Intelligence Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #7c6aff;
+    --accent2: #ff6a9e;
+    --accent3: #6affd4;
+    --text: #e8e8f0;
+    --muted: #666680;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --danger: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BACKGROUND GRID */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    margin-bottom: 48px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .header-tag {
+    font-size: 11px;
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-tag::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* UPLOAD SECTION */
+  .upload-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s 0.1s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label .num {
+    background: var(--accent);
+    color: #fff;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .upload-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 16px;
+    align-items: end;
+  }
+
+  @media (max-width: 640px) {
+    .upload-row { grid-template-columns: 1fr; }
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 8px; }
+
+  .field-group label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .file-input-wrapper {
+    position: relative;
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .file-input-wrapper:hover {
+    border-color: var(--accent);
+    background: rgba(124,106,255,0.05);
+  }
+
+  .file-input-wrapper.has-file {
+    border-color: var(--accent3);
+    border-style: solid;
+  }
+
+  .file-input-wrapper input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .file-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .file-text { font-size: 12px; }
+  .file-text .primary { color: var(--text); }
+  .file-text .secondary { color: var(--muted); font-size: 11px; }
+
+  textarea {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    resize: vertical;
+    min-height: 72px;
+    width: 100%;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .btn-upload {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 16px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: fit-content;
+  }
+
+  .btn-upload:hover {
+    background: #9b8dff;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(124,106,255,0.3);
+  }
+
+  .btn-upload:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* RESUME ID BADGE */
+  .resume-id-badge {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    background: rgba(106,255,212,0.08);
+    border: 1px solid rgba(106,255,212,0.2);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-top: 16px;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .resume-id-badge.show { display: flex; }
+
+  .badge-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 8px var(--accent3);
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+
+  .badge-text { font-size: 12px; color: var(--accent3); }
+  .badge-id {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--accent3);
+    margin-left: auto;
+  }
+
+  /* AGENTS GRID */
+  .agents-section {
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .agents-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+
+  /* AGENT CARD */
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .agent-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-color, var(--accent));
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .agent-card:hover {
+    border-color: var(--card-color, var(--accent));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .agent-card:hover::before { opacity: 1; }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .card-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .card-endpoint {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    background: var(--surface2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .card-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .card-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .btn-run {
+    width: 100%;
+    padding: 10px 16px;
+    border: 1.5px solid var(--card-color, var(--accent));
+    border-radius: 8px;
+    background: transparent;
+    color: var(--card-color, var(--accent));
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-run:hover:not(:disabled) {
+    background: var(--card-color, var(--accent));
+    color: #000;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+
+  .btn-run:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .btn-run.loading {
+    pointer-events: none;
+  }
+
+  /* RESULT PANEL */
+  .result-panel {
+    margin-top: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: none;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .result-panel.show { display: block; }
+
+  .result-header {
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-status {
+    font-size: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  .result-time { font-size: 10px; color: var(--muted); }
+
+  .result-body {
+    padding: 12px 14px;
+    font-size: 11px;
+    line-height: 1.6;
+    max-height: 200px;
+    overflow-y: auto;
+    color: #b0b0c8;
+  }
+
+  .result-body::-webkit-scrollbar { width: 4px; }
+  .result-body::-webkit-scrollbar-track { background: transparent; }
+  .result-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* JSON prettify */
+  .json-key { color: #7c9fff; }
+  .json-str { color: #a8ff78; }
+  .json-num { color: #ffcc66; }
+  .json-bool { color: #ff9e6a; }
+  .json-null { color: var(--muted); }
+
+  /* DECISION BADGE */
+  .decision-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .decision-APPROVE { background: rgba(74,222,128,0.15); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+  .decision-REVIEW  { background: rgba(251,191,36,0.15);  color: var(--warning); border: 1px solid rgba(251,191,36,0.3); }
+  .decision-REJECT  { background: rgba(248,113,113,0.15); color: var(--danger);  border: 1px solid rgba(248,113,113,0.3); }
+
+  /* SPINNER */
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: none;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    z-index: 1000;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    max-width: 320px;
+  }
+
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* API CONFIG */
+  .api-config {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s 0.05s ease both;
+  }
+
+  .api-config input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    flex: 1;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .api-config input:focus { border-color: var(--accent); }
+
+  .api-label {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+  }
+
+  /* RUN ALL BUTTON */
+  .run-all-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s 0.15s ease both;
+    flex-wrap: wrap;
+  }
+
+  .run-all-bar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent2), var(--accent), transparent);
+  }
+
+  .btn-run-all {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-run-all:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(124,106,255,0.4);
+  }
+
+  .btn-run-all:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .run-all-info { flex: 1; }
+
+  .run-all-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .run-all-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    margin-top: 14px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+
+  .progress-wrap.show { display: flex; }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+
+  .progress-label { color: var(--muted); }
+
+  .progress-count {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: var(--accent3);
+  }
+
+  .progress-bar-bg {
+    width: 100%;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  /* SUMMARY STRIP */
+  .summary-strip {
+    display: none;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .summary-strip.show { display: flex; }
+
+  .summary-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .chip-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .chip-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-tag">Resume Intelligence Engine</div>
+    <h1>Multi-Agent<br/>Validation System</h1>
+    <p class="subtitle">Upload once → run any agent independently → inspect each result</p>
+  </header>
+
+  <!-- API BASE URL -->
+  <div class="api-config">
+    <span class="api-label">API</span>
+    <input type="text" id="apiBase" value="http://127.0.0.1:8000" placeholder="http://127.0.0.1:8000"/>
+  </div>
+
+  <!-- STEP 1: UPLOAD -->
+  <div class="upload-section">
+    <div class="section-label"><span class="num">1</span> Upload Resume PDF</div>
+    <div class="upload-row">
+      <div class="field-group">
+        <label>Resume PDF</label>
+        <div class="file-input-wrapper" id="fileWrapper">
+          <input type="file" id="pdfFile" accept=".pdf" onchange="onFileChange(this)"/>
+          <span class="file-icon">📄</span>
+          <div class="file-text">
+            <div class="primary" id="fileName">Choose PDF file</div>
+            <div class="secondary">Only .pdf files supported</div>
+          </div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Job Description (optional)</label>
+        <textarea id="jobDesc" placeholder="Paste job description for JD-aware scoring..."></textarea>
+      </div>
+      <button class="btn-upload" id="uploadBtn" onclick="uploadResume()">
+        <span id="uploadSpinner" class="spinner"></span>
+        <span id="uploadBtnText">↑ Upload</span>
+      </button>
+    </div>
+
+    <div class="resume-id-badge" id="resumeBadge">
+      <span class="badge-dot"></span>
+      <span class="badge-text">Resume uploaded — ID ready for agents</span>
+      <span class="badge-id" id="resumeIdDisplay">#—</span>
+    </div>
+  </div>
+
+  <!-- STEP 2: RUN ALL BAR -->
+  <div class="run-all-bar">
+    <div class="run-all-info">
+      <div class="run-all-title">⚡ Run All Agents in Parallel</div>
+      <div class="run-all-sub">Fires all 17 agents simultaneously — results appear as each one completes</div>
+    </div>
+    <button class="btn-run-all" id="btnRunAll" onclick="runAllAgents()" disabled>
+      <span id="runAllSpinner" class="spinner"></span>
+      <span id="runAllText">Run All</span>
+    </button>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-row">
+        <span class="progress-label" id="progressLabel">Running agents...</span>
+        <span class="progress-count" id="progressCount">0 / 17</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY shown after Run All -->
+  <div class="summary-strip" id="summaryStrip">
+    <div class="summary-chip">
+      <span class="chip-label">Completed</span>
+      <span class="chip-value" id="sumCompleted" style="color:var(--accent3)">—</span>
+    </div>
+    <div class="summary-chip">
+      <span class="chip-label">Errors</span>
+      <span class="chip-value" id="sumErrors" style="color:var(--danger)">—</span>
+    </div>
+    <div class="summary-chip">
+      <span class="chip-label">Total Time</span>
+      <span class="chip-value" id="sumTime" style="color:var(--accent)">—</span>
+    </div>
+    <div class="summary-chip">
+      <span class="chip-label">Decision</span>
+      <span class="chip-value" id="sumDecision">—</span>
+    </div>
+    <div class="summary-chip">
+      <span class="chip-label">Risk Level</span>
+      <span class="chip-value" id="sumRisk">—</span>
+    </div>
+  </div>
+
+  <!-- STEP 3: AGENTS -->
+  <div class="agents-section">
+    <div class="section-label"><span class="num">3</span> Run Agents Independently</div>
+
+    <div class="agents-grid" id="agentsGrid">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =============================================================
+// AGENT DEFINITIONS
+// =============================================================
+const AGENTS = [
+  {
+    id: "classify",
+    name: "Document Classifier",
+    desc: "Detects if the file is a resume or something else (invoice, contract, medical, etc.)",
+    icon: "🔍",
+    endpoint: "/agent/classify",
+    color: "#7c6aff",
+  },
+  {
+    id: "extract",
+    name: "Field Extractor",
+    desc: "Pulls all structured fields — name, email, experience, skills, education — via LLM.",
+    icon: "⚙️",
+    endpoint: "/agent/extract",
+    color: "#6a9eff",
+  },
+  {
+    id: "validate",
+    name: "Schema Validator",
+    desc: "Validates extracted JSON against the Resume schema. Checks formats, completeness.",
+    icon: "✅",
+    endpoint: "/agent/validate",
+    color: "#6affd4",
+  },
+  {
+    id: "keywords",
+    name: "Suspicious Keywords",
+    desc: "Scans for fraud signals, financial scams, illegal activities, spam patterns.",
+    icon: "🚨",
+    endpoint: "/agent/keywords",
+    color: "#ff6a9e",
+  },
+  {
+    id: "gaps",
+    name: "Employment Gaps",
+    desc: "Detects unexplained gaps between jobs (>6 months flagged).",
+    icon: "📅",
+    endpoint: "/agent/gaps",
+    color: "#ffcc6a",
+  },
+  {
+    id: "overlaps",
+    name: "Overlapping Jobs",
+    desc: "Flags impossible date overlaps — two full-time jobs at the same time.",
+    icon: "⚡",
+    endpoint: "/agent/overlaps",
+    color: "#ff9e6a",
+  },
+  {
+    id: "academics",
+    name: "Academic Anomalies",
+    desc: "Detects impossible academic timelines (Masters before Bachelor's, etc.).",
+    icon: "🎓",
+    endpoint: "/agent/academics",
+    color: "#a78bfa",
+  },
+  {
+    id: "percentages",
+    name: "Percentage Inflation",
+    desc: "Detects inflated or invalid percentages in skills or achievements (e.g. 'Increased sales by 200%').",
+    icon: "📈",
+    endpoint: "/agent/percentages",
+    color: "#fbbf24",
+  },
+  {
+    id: "future-dates",
+    name: "Future Date Flags",
+    desc: "Flags experience end dates that are set in the future (excluding Present).",
+    icon: "🕐",
+    endpoint: "/agent/future-dates",
+    color: "#f87171",
+  },
+  {
+    id: "skills",
+    name: "Skills Check",
+    desc: "Checks technical skills presence and depth. Flags empty or very thin skill sections.",
+    icon: "🛠",
+    endpoint: "/agent/skills",
+    color: "#4ade80",
+  },
+  {
+    id: "tenure",
+    name: "Job-Hopping Detection",
+    desc: "Detects 3+ full-time roles each under 6 months — job-hopping signal.",
+    icon: "🏃",
+    endpoint: "/agent/tenure",
+    color: "#fbbf24",
+  },
+  {
+    id: "duplicates",
+    name: "Duplicate Entries",
+    desc: "Detects the same company + position listed multiple times.",
+    icon: "👥",
+    endpoint: "/agent/duplicates",
+    color: "#38bdf8",
+  },
+  {
+    id: "seniority",
+    name: "Seniority Mismatch",
+    desc: "Checks if claimed titles (CEO, CTO, Senior) match years of experience.",
+    icon: "📊",
+    endpoint: "/agent/seniority",
+    color: "#e879f9",
+  },
+  {
+    id: "integrity",
+    name: "Full Integrity Engine",
+    desc: "Runs ALL fraud detectors and produces a single integrity score + breakdown.",
+    icon: "🔐",
+    endpoint: "/agent/integrity",
+    color: "#ff6a9e",
+  },
+  {
+    id: "llm-score",
+    name: "LLM Quality Score",
+    desc: "Semantically evaluates resume quality — technical fit, impact, culture fit.",
+    icon: "🤖",
+    endpoint: "/agent/llm-score",
+    color: "#7c6aff",
+  },
+  {
+    id: "risk",
+    name: "Risk Fusion Engine",
+    desc: "Fuses structural + LLM scores into final risk level and APPROVE/REVIEW/REJECT.",
+    icon: "⚖️",
+    endpoint: "/agent/risk",
+    color: "#6affd4",
+  },
+  {
+    id: "full-pipeline",
+    name: "Full Pipeline",
+    desc: "Runs the complete LangGraph pipeline end-to-end in one shot.",
+    icon: "🚀",
+    endpoint: "/agent/full-pipeline",
+    color: "#ffffff",
+  },
+];
+
+// =============================================================
+// STATE
+// =============================================================
+let resumeId = null;
+
+// =============================================================
+// RENDER AGENT CARDS
+// =============================================================
+function renderAgents() {
+  const grid = document.getElementById("agentsGrid");
+  grid.innerHTML = AGENTS.map(a => `
+    <div class="agent-card" id="card-${a.id}" style="--card-color: ${a.color}">
+      <div class="card-top">
+        <div class="card-icon">${a.icon}</div>
+        <span class="card-endpoint">POST ${a.endpoint}</span>
+      </div>
+      <div class="card-name">${a.name}</div>
+      <div class="card-desc">${a.desc}</div>
+      <button class="btn-run" id="btn-${a.id}" onclick="runAgent('${a.id}')" disabled>
+        <span id="spin-${a.id}" class="spinner"></span>
+        <span id="btntext-${a.id}">Run Agent</span>
+      </button>
+      <div class="result-panel" id="result-${a.id}">
+        <div class="result-header">
+          <span class="result-status" id="status-${a.id}">
+            <span class="status-dot"></span> —
+          </span>
+          <span class="result-time" id="time-${a.id}"></span>
+        </div>
+        <div class="result-body" id="body-${a.id}"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+// =============================================================
+// FILE CHANGE
+// =============================================================
+function onFileChange(input) {
+  const wrapper = document.getElementById("fileWrapper");
+  const nameEl  = document.getElementById("fileName");
+  if (input.files[0]) {
+    nameEl.textContent = input.files[0].name;
+    wrapper.classList.add("has-file");
+  }
+}
+
+// =============================================================
+// UPLOAD RESUME
+// =============================================================
+async function uploadResume() {
+  const file = document.getElementById("pdfFile").files[0];
+  if (!file) { showToast("⚠️ Please select a PDF file first"); return; }
+
+  const btn     = document.getElementById("uploadBtn");
+  const spinner = document.getElementById("uploadSpinner");
+  const btnText = document.getElementById("uploadBtnText");
+
+  btn.disabled          = true;
+  spinner.style.display = "block";
+  btnText.textContent   = "Uploading...";
+
+  const formData = new FormData();
+  formData.append("file", file);
+  const jd = document.getElementById("jobDesc").value.trim();
+  if (jd) formData.append("job_description", jd);
+
+  try {
+    const base = document.getElementById("apiBase").value.trim();
+    const res  = await fetch(`${base}/resume/upload`, {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.detail || "Upload failed");
+
+    resumeId = data.resume_id;
+    document.getElementById("resumeIdDisplay").textContent = `#${resumeId}`;
+    document.getElementById("resumeBadge").classList.add("show");
+
+    // Enable all agent buttons + Run All
+    AGENTS.forEach(a => {
+      document.getElementById(`btn-${a.id}`).disabled = false;
+    });
+    document.getElementById("btnRunAll").disabled = false;
+
+    showToast(`✅ Resume uploaded! ID: ${resumeId}`);
+
+  } catch (err) {
+    showToast(`❌ ${err.message}`);
+  } finally {
+    btn.disabled          = false;
+    spinner.style.display = "none";
+    btnText.textContent   = "↑ Upload";
+  }
+}
+
+// =============================================================
+// RUN AGENT
+// =============================================================
+async function runAgent(agentId) {
+  if (!resumeId) { showToast("⚠️ Upload a resume first"); return; }
+
+  const agent   = AGENTS.find(a => a.id === agentId);
+  const btn     = document.getElementById(`btn-${agentId}`);
+  const spinner = document.getElementById(`spin-${agentId}`);
+  const btnText = document.getElementById(`btntext-${agentId}`);
+  const resultPanel = document.getElementById(`result-${agentId}`);
+  const statusEl    = document.getElementById(`status-${agentId}`);
+  const timeEl      = document.getElementById(`time-${agentId}`);
+  const bodyEl      = document.getElementById(`body-${agentId}`);
+
+  // Loading state
+  btn.disabled          = true;
+  btn.classList.add("loading");
+  spinner.style.display = "block";
+  btnText.textContent   = "Running...";
+  resultPanel.classList.remove("show");
+
+  const start = Date.now();
+
+  try {
+    const base = document.getElementById("apiBase").value.trim();
+    const jd   = document.getElementById("jobDesc").value.trim();
+
+    const res  = await fetch(`${base}${agent.endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        resume_id: resumeId,
+        ...(jd ? { job_description: jd } : {}),
+      }),
+    });
+
+    const data = await res.json();
+    const ms   = Date.now() - start;
+
+    if (!res.ok) throw new Error(data.detail || "Agent failed");
+
+    // Show result
+    resultPanel.classList.add("show");
+    timeEl.textContent = `${ms}ms`;
+
+    statusEl.innerHTML = `
+      <span class="status-dot" style="background: #4ade80; box-shadow: 0 0 6px #4ade80"></span>
+      <span style="color: #4ade80; font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px;">SUCCESS</span>
+    `;
+
+    bodyEl.innerHTML = renderResult(data.result, agentId);
+
+  } catch (err) {
+    const ms = Date.now() - start;
+    resultPanel.classList.add("show");
+    timeEl.textContent = `${ms}ms`;
+    statusEl.innerHTML = `
+      <span class="status-dot" style="background: #f87171; box-shadow: 0 0 6px #f87171"></span>
+      <span style="color: #f87171; font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px;">ERROR</span>
+    `;
+    bodyEl.innerHTML = `<span style="color: #f87171">${err.message}</span>`;
+    showToast(`❌ ${agent.name}: ${err.message}`);
+
+  } finally {
+    btn.disabled          = false;
+    btn.classList.remove("loading");
+    spinner.style.display = "none";
+    btnText.textContent   = "Run Agent";
+  }
+}
+
+// =============================================================
+// RUN ALL AGENTS IN PARALLEL
+// =============================================================
+async function runAllAgents() {
+  if (!resumeId) { showToast("⚠️ Upload a resume first"); return; }
+
+  const btn        = document.getElementById("btnRunAll");
+  const spinner    = document.getElementById("runAllSpinner");
+  const btnText    = document.getElementById("runAllText");
+  const progressWrap  = document.getElementById("progressWrap");
+  const progressFill  = document.getElementById("progressFill");
+  const progressCount = document.getElementById("progressCount");
+  const progressLabel = document.getElementById("progressLabel");
+  const summaryStrip  = document.getElementById("summaryStrip");
+
+  // Reset UI
+  btn.disabled          = true;
+  spinner.style.display = "block";
+  btnText.textContent   = "Running...";
+  progressWrap.classList.add("show");
+  summaryStrip.classList.remove("show");
+
+  let completed = 0;
+  let errors    = 0;
+  const total   = AGENTS.length;
+  const wallStart = Date.now();
+
+  // Update progress bar
+  function tick() {
+    completed++;
+    const pct = Math.round((completed / total) * 100);
+    progressFill.style.width = `${pct}%`;
+    progressCount.textContent = `${completed} / ${total}`;
+    progressLabel.textContent = completed === total ? "All agents done!" : "Running agents...";
+  }
+
+  // Fire all agents in parallel using Promise.allSettled
+  const promises = AGENTS.map(agent =>
+    runAgentSilent(agent)
+      .then(result => { tick(); return { agent, result, ok: true }; })
+      .catch(err   => { tick(); errors++; return { agent, err, ok: false }; })
+  );
+
+  await Promise.allSettled(promises);
+
+  const totalMs = Date.now() - wallStart;
+
+  // Pull decision + risk from risk agent result if available
+  const riskPanel = document.getElementById("body-risk");
+  let decision = "—", riskLevel = "—";
+  try {
+    const riskCard = document.getElementById("card-risk");
+    const decEl = riskCard?.querySelector(".decision-badge");
+    if (decEl) decision = decEl.textContent.trim().replace(/^[^\w]+/, "").trim();
+    const bodyText = riskPanel?.innerText || "";
+    const rlMatch  = bodyText.match(/Risk Level[\s\S]{0,20}?(LOW|MEDIUM|HIGH|CRITICAL)/);
+    if (rlMatch) riskLevel = rlMatch[1];
+  } catch(_) {}
+
+  // Show summary strip
+  document.getElementById("sumCompleted").textContent = `${completed - errors}`;
+  document.getElementById("sumErrors").textContent    = `${errors}`;
+  document.getElementById("sumTime").textContent      = totalMs > 1000 ? `${(totalMs/1000).toFixed(1)}s` : `${totalMs}ms`;
+  document.getElementById("sumDecision").textContent  = decision;
+  document.getElementById("sumRisk").textContent      = riskLevel;
+
+  // Color decision chip
+  const decChip = document.getElementById("sumDecision");
+  if (decision.includes("APPROVE")) decChip.style.color = "var(--success)";
+  else if (decision.includes("REVIEW")) decChip.style.color = "var(--warning)";
+  else if (decision.includes("REJECT")) decChip.style.color = "var(--danger)";
+
+  summaryStrip.classList.add("show");
+
+  // Reset button
+  btn.disabled          = false;
+  spinner.style.display = "none";
+  btnText.textContent   = "Run All";
+
+  showToast(`✅ All ${total} agents completed in ${(totalMs/1000).toFixed(1)}s`);
+}
+
+// Silent version of runAgent — updates card UI but doesn't show toast on error
+async function runAgentSilent(agent) {
+  const btn         = document.getElementById(`btn-${agent.id}`);
+  const spinner     = document.getElementById(`spin-${agent.id}`);
+  const btnText     = document.getElementById(`btntext-${agent.id}`);
+  const resultPanel = document.getElementById(`result-${agent.id}`);
+  const statusEl    = document.getElementById(`status-${agent.id}`);
+  const timeEl      = document.getElementById(`time-${agent.id}`);
+  const bodyEl      = document.getElementById(`body-${agent.id}`);
+
+  btn.disabled          = true;
+  spinner.style.display = "block";
+  btnText.textContent   = "Running...";
+  resultPanel.classList.remove("show");
+
+  const start = Date.now();
+
+  try {
+    const base = document.getElementById("apiBase").value.trim();
+    const jd   = document.getElementById("jobDesc").value.trim();
+
+    const res  = await fetch(`${base}${agent.endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        resume_id: resumeId,
+        ...(jd ? { job_description: jd } : {}),
+      }),
+    });
+
+    const data = await res.json();
+    const ms   = Date.now() - start;
+
+    if (!res.ok) throw new Error(data.detail || "Agent failed");
+
+    resultPanel.classList.add("show");
+    timeEl.textContent = `${ms}ms`;
+    statusEl.innerHTML = `
+      <span class="status-dot" style="background:#4ade80;box-shadow:0 0 6px #4ade80"></span>
+      <span style="color:#4ade80;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px">SUCCESS</span>
+    `;
+    bodyEl.innerHTML = renderResult(data.result, agent.id);
+    return data;
+
+  } catch(err) {
+    const ms = Date.now() - start;
+    resultPanel.classList.add("show");
+    timeEl.textContent = `${ms}ms`;
+    statusEl.innerHTML = `
+      <span class="status-dot" style="background:#f87171;box-shadow:0 0 6px #f87171"></span>
+      <span style="color:#f87171;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px">ERROR</span>
+    `;
+    bodyEl.innerHTML = `<span style="color:#f87171">${err.message}</span>`;
+    throw err;
+
+  } finally {
+    btn.disabled          = false;
+    spinner.style.display = "none";
+    btnText.textContent   = "Run Agent";
+  }
+}
+
+
+// =============================================================
+// RENDER RESULT  — handles all agent response shapes
+// =============================================================
+function renderResult(result, agentId) {
+  if (!result) return '<span style="color: var(--muted)">No result</span>';
+
+  // ── Classify ────────────────────────────────────────────────
+  if (agentId === "classify") {
+    const isResume = result.is_resume;
+    return `
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px">
+        <span style="font-size:24px">${isResume ? "✅" : "❌"}</span>
+        <span style="font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:${isResume ? "var(--success)" : "var(--danger)"}">
+          ${result.doc_type?.toUpperCase()}
+        </span>
+      </div>
+      <div style="color:var(--muted); font-size:11px">${isResume ? "Document confirmed as resume" : "Not a resume — other agents may not work correctly"}</div>
+    `;
+  }
+
+  // ── Risk / Full Pipeline ────────────────────────────────────
+  if (agentId === "risk" || agentId === "full-pipeline") {
+    const dec = result.decision || result.result?.decision;
+    return `
+      <div style="margin-bottom:10px">
+        ${dec ? `<span class="decision-badge decision-${dec}">${dec === "APPROVE" ? "✅" : dec === "REVIEW" ? "⚠️" : "❌"} ${dec}</span>` : ""}
+      </div>
+      ${renderKeyValues({
+        "Risk Level": result.risk_level,
+        "Risk Score": result.risk_score !== undefined ? `${result.risk_score}/100` : undefined,
+        "Structural": result.structural_score !== undefined ? `${result.structural_score}/100` : undefined,
+        "LLM Score":  result.llm_score !== undefined ? `${result.llm_score}/100` : undefined,
+        "Confidence": result.final_confidence !== undefined ? `${result.final_confidence}/100` : undefined,
+      })}
+    `;
+  }
+
+  // ── Validate ────────────────────────────────────────────────
+  if (agentId === "validate") {
+    const statusColor = result.status === "passed" ? "var(--success)"
+                      : result.status === "failed"  ? "var(--danger)"
+                      : "var(--warning)";
+    return `
+      <div style="margin-bottom:8px">
+        <span style="font-family:'Syne',sans-serif; font-size:12px; font-weight:700; color:${statusColor}">
+          ${result.status?.toUpperCase()}
+        </span>
+      </div>
+      ${renderKeyValues({
+        "Completeness": result.completeness_score !== undefined ? `${result.completeness_score}/100` : undefined,
+        "Confidence":   result.extraction_confidence !== undefined ? `${(result.extraction_confidence * 100).toFixed(0)}%` : undefined,
+        "Warnings":     result.consistency_warnings?.length ? `${result.consistency_warnings.length} found` : "None",
+      })}
+      ${result.warning ? `<div style="margin-top:8px; color:var(--warning); font-size:10px; line-height:1.5">${result.warning}</div>` : ""}
+    `;
+  }
+
+  // ── LLM Score ───────────────────────────────────────────────
+  if (agentId === "llm-score") {
+    return renderKeyValues({
+      "LLM Score":  result.llm_score !== undefined ? `${result.llm_score}/100` : undefined,
+      "JD-Aware":   result.job_description_used ? "Yes" : "No",
+      "Fallback":   result.is_fallback ? "⚠️ Yes" : "No",
+    });
+  }
+
+  // ── Percentage Inflation (dedicated renderer) ───────────────
+  if (agentId === "percentages") {
+    const signalColor = result.risk_signal === "HIGH"   ? "var(--danger)"
+                      : result.risk_signal === "MEDIUM" ? "var(--warning)"
+                      : "var(--success)";
+    let html = renderKeyValues({
+      "Penalty":     result.penalty !== undefined ? `${result.penalty} pts` : undefined,
+      "Risk Signal": result.risk_signal,
+      "Flags":       result.flag_count,
+    });
+
+    const flags = result.percentage_flags;
+    if (flags?.length) {
+      html += `<div style="margin-top:8px; display:flex; flex-direction:column; gap:4px">`;
+      flags.slice(0, 4).forEach(f => {
+        html += `<div style="font-size:10px; color:var(--muted); padding:4px 8px; background:rgba(255,255,255,0.03); border-radius:4px; border-left:2px solid ${signalColor}">${f}</div>`;
+      });
+      if (flags.length > 4) {
+        html += `<div style="font-size:10px; color:var(--muted)">+${flags.length - 4} more...</div>`;
+      }
+      html += `</div>`;
+    } else {
+      html += `<div style="margin-top:8px; font-size:10px; color:var(--success)">✓ No inflated percentages detected</div>`;
+    }
+    return html;
+  }
+
+  // ── Generic fraud agents (penalty + risk_signal + details) ──
+  if (result.penalty !== undefined) {
+    const signalColor = result.risk_signal === "HIGH"   ? "var(--danger)"
+                      : result.risk_signal === "MEDIUM" ? "var(--warning)"
+                      : "var(--success)";
+    let html = renderKeyValues({
+      "Penalty":     result.penalty !== undefined ? `${result.penalty} pts` : undefined,
+      "Risk Signal": result.risk_signal,
+      "Flags":       result.trigger_count ?? result.gap_count ?? result.overlap_count
+                     ?? result.flag_count ?? result.mismatch_count ?? result.duplicate_count,
+    });
+
+    // Extract details array — covers all fraud agent shapes
+    const details = result.triggers
+                 || result.gap_details
+                 || result.overlap_details
+                 || result.academic_flags
+                 || result.future_date_flags
+                 || result.skill_flags
+                 || result.short_tenure_details
+                 || result.duplicate_details
+                 || result.seniority_details;
+
+    if (details?.length) {
+      html += `<div style="margin-top:8px; display:flex; flex-direction:column; gap:4px">`;
+      details.slice(0, 4).forEach(d => {
+        html += `<div style="font-size:10px; color:var(--muted); padding:4px 8px; background:rgba(255,255,255,0.03); border-radius:4px; border-left:2px solid ${signalColor}">${d}</div>`;
+      });
+      if (details.length > 4) html += `<div style="font-size:10px; color:var(--muted)">+${details.length - 4} more...</div>`;
+      html += `</div>`;
+    }
+    return html;
+  }
+
+  // ── Integrity Engine ────────────────────────────────────────
+  if (result.integrity_score !== undefined) {
+    return renderKeyValues({
+      "Integrity Score": `${result.integrity_score}/100`,
+      "Risk Level":      result.risk_level,
+      "Total Penalty":   `${result.total_penalty} pts`,
+    });
+  }
+
+  // ── Fallback: pretty JSON ───────────────────────────────────
+  return `<pre style="font-size:10px; white-space:pre-wrap; word-break:break-all; color:#b0b0c8">${JSON.stringify(result, null, 2)}</pre>`;
+}
+
+function renderKeyValues(obj) {
+  const entries = Object.entries(obj).filter(([_, v]) => v !== undefined && v !== null);
+  if (!entries.length) return "";
+  return `
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px">
+      ${entries.map(([k, v]) => `
+        <div>
+          <div style="font-size:10px; color:var(--muted); letter-spacing:0.5px; margin-bottom:2px">${k}</div>
+          <div style="font-size:12px; font-family:'Syne',sans-serif; font-weight:600; color:var(--text)">${v}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+// =============================================================
+// TOAST
+// =============================================================
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+// =============================================================
+// INIT
+// =============================================================
+renderAgents();
+</script>
+</body>
+</html>
