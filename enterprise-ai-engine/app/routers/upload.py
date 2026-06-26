@@ -91,3 +91,5 @@ async def upload_resume(
         "text_length": len(document_text),
         "message":     f"Resume uploaded. Use resume_id={resume_id} to run agents.",
     }
+
+# Changes are made to the upload_resume function to ensure that the extracted text is always a string and to strip any leading or trailing whitespace. Additionally, a check is added to ensure that the extracted text is of sufficient length (at least 50 characters) to be considered valid. If the text is too short, an HTTPException is raised with a 422 status code and a message indicating that the PDF may be blank or image-only.
